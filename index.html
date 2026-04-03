@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Mon Budget Zen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Bangers&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #b91c1c; --text: #f8fafc; }
+        
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent;
+            max-width: 100%; 
+        }
+        
+        body { 
+            font-family: 'Patrick Hand', cursive; 
+            color: var(--text); 
+            background-color: #000;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: calc(20px + env(safe-area-inset-top)) 12px 120px 12px;
+        }
+
+        /* FIX DEZOOM -20% (Taille à 80%) */
+        .bg-fixed {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: url('gost-house_976586-9372.jpg') no-repeat center center;
+            background-size: 80%; /* IMAGE DEZOOMEE DE 20% */
+            z-index: -2;
+            background-color: #000; /* Fond noir pour combler les bords */
+        }
+
+        .overlay { 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(0, 0, 0, 0.75); 
+            z-index: -1; 
+        }
+
+        /* CADRE DE TITRE ARTISTIQUE */
+        .main-header-art {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 18px 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .subtitle-box {
+            font-family: 'Patrick Hand', cursive;
+            font-size: 32px; /* Gros titre zen */
+            color: #fff;
+            margin-bottom: 4px;
+            display: block;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .main-title-gothic {
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            color: var(--primary);
+            letter-spacing: 4px;
+            display: block;
+            opacity: 0.8;
+        }
+
+        /* BLOC SOLDE INITIAL */
+        .solde-header { 
+            background: rgba(0,0,0,0.8); 
+            border: 1px solid var(--primary); 
+            padding: 12px; 
+            border-radius: 16px; 
+            margin-bottom: 15px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+
+        #internalSaveBox {
+            display: none; background: #facc15; color: #000; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 3px solid #fff;
+        }
+        #internalSaveBox textarea { width: 100%; height: 80px; margin: 10px 0; background: #000; color: #4ade80; border: none; padding: 8px; font-family: monospace; font-size: 11px; border-radius: 6px; }
+
+        .summary-grid { display: flex; gap: 8px; margin-bottom: 15px; }
+        .summary-card { flex: 1; background: rgba(15, 23, 42, 0.95); padding: 10px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
+        .summary-val { font-family: 'Bangers', cursive; font-size: 22px; }
+        
+        .cat-card { background: rgba(15, 23, 42, 0.9); border-radius: 16px; border: 1px solid #334155; margin-bottom: 15px; overflow: hidden; }
+        
+        /* TITRE CATEGORIES SANS ROUGE */
+        .cat-header { 
+            padding: 12px 12px 8px 12px; 
+            background: transparent; 
+            font-family: 'Cinzel', serif; 
+            font-size: 14px; 
+            color: var(--primary); 
+            display: flex; 
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(185, 28, 28, 0.2); 
+        }
+        
+        .item-row { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px solid #334155; gap: 8px; }
+        .check { width: 22px; height: 22px; border: 2px solid var(--primary); border-radius: 6px; flex-shrink: 0; }
+        .done .check { background: var(--primary); position: relative; }
+        .done .check::after { content: '✓'; color: white; position: absolute; left: 4px; top: -3px; font-size: 14px; }
+        
+        .item-label { flex: 1; font-size: 19px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-amt-val { font-weight: bold; flex-shrink: 0; color: #fff; }
+
+        input { background: #000; color: #fff; border: 1px solid #334155; padding: 10px; border-radius: 8px; font-size: 16px !important; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 2px solid var(--primary); padding: 12px 10px calc(25px + env(safe-area-inset-bottom)); display: flex; justify-content: space-around; z-index: 100; }
+        .nav-btn { background: none; border: none; color: #444; font-family: 'Bangers'; font-size: 18px; }
+        .nav-btn.active { color: var(--primary); }
+
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #16a34a; color: #fff; padding: 10px 20px; border-radius: 20px; font-weight: bold; z-index: 9999; transition: transform 0.3s ease; }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+    <div class="bg-fixed"></div>
+    <div class="overlay"></div>
+    <div id="toast">✅ Code copié !</div>
+
+    <div class="main-header-art">
+        <span class="subtitle-box">Mon budget zen</span>
+        <h1 class="main-title-gothic">SANCTUARIUM</h1>
+    </div>
+
+    <div class="solde-header">
+        <span style="font-family: 'Cinzel'; font-size: 11px; color: #888; letter-spacing: 1px;">BUTIN INITIAL</span>
+        <input type="number" id="soldeInit" step="0.01" style="width: 110px; text-align: right;" oninput="update()">
+    </div>
+
+    <div id="internalSaveBox">
+        <b style="font-family: 'Cinzel'; font-size: 12px;">VOTRE SCEAU :</b><br>
+        <textarea id="saveCodeArea" readonly></textarea>
+        <button class="btn" style="width:100%; background:#16a34a; margin-bottom:8px;" onclick="copyCode()">📋 COPIER LE CODE</button>
+        <button class="btn" style="width:100%; background:#000;" onclick="document.getElementById('internalSaveBox').style.display='none'">FERMER ×</button>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button class="btn" style="flex: 1; background: #facc15; color: #000;" onclick="showInternalSave()">💾 SAUVEGARDER</button>
+        <button class="btn" style="flex: 1; background: #334155;" onclick="importData()">📂 CHARGER</button>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card"><small style="font-size: 10px; color: #666; letter-spacing: 1px;">ORACLE</small><br><div class="summary-val" id="sPrev">0€</div></div>
+        <div class="summary-card"><small style="font-size: 10px; color: #666; letter-spacing: 1px;">RÉEL LIBRE</small><br><div class="summary-val" id="sReel" style="color: var(--primary);">0€</div></div>
+    </div>
+
+    <div id="view-budget">
+        <div id="catsGrid"></div>
+    </div>
+
+    <div id="view-tx" style="display:none; padding-bottom: 50px;">
+        <div class="cat-card" style="padding:15px;">
+            <input type="text" id="txLib" placeholder="Lieu du sacrifice..." style="width:100%; margin-bottom:10px;">
+            <input type="number" id="txAmt" placeholder="Montant" style="width:100%; margin-bottom:10px;">
+            <button class="btn" style="width:100%" onclick="addTx()">INSCRIRE</button>
+        </div>
+        <div id="txList"></div>
+    </div>
+
+    <nav class="nav-bar">
+        <button class="nav-btn active" id="btnB" onclick="nav('budget')">DONJON</button>
+        <button class="nav-btn" id="btnT" onclick="nav('tx')">REGISTRE</button>
+    </nav>
+
+<script>
+// Le reste du script reste identique
+const KEY = 'sanct_gh_v3';
+let store = JSON.parse(localStorage.getItem(KEY)) || {
+    solde: 3000, transactions: [],
+    cats: [
+        {id:'m', label:'Maison', icon:'🏰', items:[]},
+        {id:'c', label:'Crédits', icon:'📜', items:[]},
+        {id:'v', label:'Transport', icon:'🐎', items:[]},
+        {id:'a', label:'Abos', icon:'📱', items:[]},
+        {id:'s', label:'Santé', icon:'🧪', items:[]},
+        {id:'o', label:'Autres', icon:'🕯️', items:[]}
+    ]
+};
+
+function save() { localStorage.setItem(KEY, JSON.stringify(store)); }
+
+function update() {
+    store.solde = parseFloat(document.getElementById('soldeInit').value) || 0;
+    save();
+    let tF = 0, tP = 0;
+    store.cats.forEach(c => {
+        let ct = 0;
+        c.items.forEach(it => { tF += it.amt; ct += it.amt; if(it.done) tP += it.amt; });
+        const e = document.getElementById('ct-'+c.id); if(e) e.textContent = ct.toFixed(0)+'€';
+    });
+    const tCB = store.transactions.reduce((s,t) => s + t.amt, 0);
+    document.getElementById('sPrev').textContent = (store.solde - tF).toFixed(0) + '€';
+    document.getElementById('sReel').textContent = (store.solde - tP - tCB).toFixed(2) + '€';
+}
+
+function nav(v) {
+    document.getElementById('view-budget').style.display = (v === 'budget' ? 'block' : 'none');
+    document.getElementById('view-tx').style.display = (v === 'tx' ? 'block' : 'none');
+    document.getElementById('btnB').classList.toggle('active', v === 'budget');
+    document.getElementById('btnT').classList.toggle('active', v === 'tx');
+}
+
+function render() {
+    const grid = document.getElementById('catsGrid'); grid.innerHTML = '';
+    store.cats.forEach(cat => {
+        const div = document.createElement('div'); div.className = 'cat-card';
+        div.innerHTML = `<div class="cat-header"><span>${cat.icon} ${cat.label}</span><span id="ct-${cat.id}"></span></div>
+            ${cat.items.map((it, i) => `
+                <div class="item-row ${it.done ? 'done' : ''}" onclick="toggle('${cat.id}', ${i})">
+                    <div class="check"></div>
+                    <span class="item-label">${it.l}</span>
+                    <span class="item-amt-val">${it.amt}€</span>
+                    <button style="background:none; border:none; color:#555; font-size:24px; padding-left:10px;" onclick="event.stopPropagation(); del('${cat.id}', ${i})">×</button>
+                </div>`).join('')}
+            <div style="display:flex; gap:5px; padding:10px; background:rgba(0,0,0,0.15);">
+                <input type="text" id="nl-${cat.id}" placeholder="Nom" style="flex:2; min-width:0;">
+                <input type="number" id="na-${cat.id}" placeholder="€" style="flex:1; min-width:0;">
+                <button class="btn" style="padding:10px 15px;" onclick="add('${cat.id}')">+</button>
+            </div>`;
+        grid.appendChild(div);
+    });
+}
+
+function toggle(cId, i) { store.cats.find(c=>c.id===cId).items[i].done = !store.cats.find(c=>c.id===cId).items[i].done; render(); update(); }
+function add(cId) { 
+    const l = document.getElementById('nl-'+cId), a = document.getElementById('na-'+cId);
+    if(l.value && a.value) { store.cats.find(c=>c.id===cId).items.push({l:l.value, amt:parseFloat(a.value), done:false}); render(); update(); }
+}
+function del(cId, i) { if(confirm("Supprimer ?")) { store.cats.find(c=>c.id===cId).items.splice(i,1); render(); update(); } }
+
+function addTx() {
+    const l = document.getElementById('txLib'), a = document.getElementById('txAmt');
+    if(l.value && a.value) { store.transactions.unshift({lib:l.value, amt:parseFloat(a.value)}); l.value=''; a.value=''; renderTx(); update(); }
+}
+function renderTx() {
+    document.getElementById('txList').innerHTML = store.transactions.map(t => `<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid #333; background:rgba(0,0,0,0.4);"><span>${t.lib}</span><span style="color:var(--primary); font-weight:bold;">-${t.amt.toFixed(2)}€</span></div>`).join('');
+}
+
+function showInternalSave() {
+    save();
+    const code = btoa(unescape(encodeURIComponent(JSON.stringify(store))));
+    document.getElementById('saveCodeArea').value = code;
+    document.getElementById('internalSaveBox').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function copyCode() {
+    const area = document.getElementById('saveCodeArea');
+    area.select(); area.setSelectionRange(0, 99999);
+    try {
+        navigator.clipboard.writeText(area.value).then(() => showToast('✅ Code copié !'));
+    } catch(e) {
+        document.execCommand('copy');
+        showToast('✅ Code copié !');
+    }
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function importData() { 
+    const c = prompt("COLLE TON CODE ICI :"); 
+    if(c) { try { store = JSON.parse(decodeURIComponent(escape(atob(c.trim())))); save(); render(); renderTx(); update(); showToast('✅ Chargé !'); } catch(e) { alert("Code invalide"); } }
+}
+
+document.getElementById('soldeInit').value = store.solde;
+render(); renderTx(); update();
+</script>
+</body>
+</html>

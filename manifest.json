@@ -1,0 +1,22 @@
+{
+  "name": "Sanctuarium",
+  "short_name": "Sanctuarium",
+  "description": "Mon budget personnel",
+  "start_url": "./monbudget.html",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#991b1b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
